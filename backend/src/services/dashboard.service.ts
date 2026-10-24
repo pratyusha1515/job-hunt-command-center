@@ -21,6 +21,20 @@ export async function getDashboardSummary(userId: string) {
     }),
   ])
 
+  const [recentJobs, recentApplications] = await Promise.all([
+    prisma.job.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 4,
+    }),
+    prisma.application.findMany({
+      where: { job: { userId } },
+      include: { job: true },
+      orderBy: { updatedAt: 'desc' },
+      take: 4,
+    }),
+  ])
+
   return {
     totalJobs,
     totalApplications,
@@ -28,5 +42,7 @@ export async function getDashboardSummary(userId: string) {
       status: item.status,
       count: item._count._all,
     })),
+    recentJobs,
+    recentApplications,
   }
 }

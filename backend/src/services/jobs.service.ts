@@ -10,33 +10,44 @@ export type JobInput = {
   notes?: string
 }
 
+export type JobUpdateInput = Partial<JobInput>
+
 export async function createJob(userId: string, input: JobInput) {
   return prisma.job.create({
-    data: {
-      userId,
-      ...input,
-    },
+    data: { userId, ...input },
   })
 }
 
 export async function listJobs(userId: string) {
   return prisma.job.findMany({
     where: { userId },
-    include: {
-      application: true,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
+    include: { application: true },
+    orderBy: { createdAt: 'desc' },
+  })
+}
+
+export async function updateJob(
+  userId: string,
+  jobId: string,
+  input: JobUpdateInput,
+) {
+  const job = await prisma.job.findFirst({
+    where: { id: jobId, userId },
+  })
+
+  if (!job) {
+    throw new Error('JOB_NOT_FOUND')
+  }
+
+  return prisma.job.update({
+    where: { id: jobId },
+    data: input,
   })
 }
 
 export async function deleteJob(userId: string, jobId: string) {
   const job = await prisma.job.findFirst({
-    where: {
-      id: jobId,
-      userId,
-    },
+    where: { id: jobId, userId },
   })
 
   if (!job) {

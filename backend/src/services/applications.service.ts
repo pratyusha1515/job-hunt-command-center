@@ -50,6 +50,26 @@ export async function listApplications(userId: string) {
   })
 }
 
+export async function updateApplicationNotes(
+  userId: string,
+  applicationId: string,
+  notes: string | null,
+) {
+  const application = await prisma.application.findFirst({
+    where: { id: applicationId, job: { userId } },
+  })
+
+  if (!application) {
+    throw new Error('APPLICATION_NOT_FOUND')
+  }
+
+  return prisma.application.update({
+    where: { id: applicationId },
+    data: { notes },
+    include: { job: true },
+  })
+}
+
 export async function updateApplicationStatus(
   userId: string,
   applicationId: string,

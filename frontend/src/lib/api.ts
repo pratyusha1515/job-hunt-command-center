@@ -12,6 +12,17 @@ export type JobSource =
   | 'COMPANY_WEBSITE'
   | 'REFERRAL'
   | 'OTHER'
+export type JobInput = {
+  company: string
+  title: string
+  location?: string
+  jobUrl?: string
+  description?: string
+  source: JobSource
+  notes?: string
+}
+export type InterviewType = "PHONE" | "VIDEO" | "ONSITE" | "TECHNICAL" | "HR" | "OTHER"
+export type InterviewStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED"
 
 export type ApplicationStatus =
   | 'APPLIED'
@@ -32,14 +43,62 @@ export type Job = {
   source: JobSource
   notes: string | null
   createdAt: string
+
 }
 
 export type Application = {
   id: string
   status: ApplicationStatus
   appliedAt: string
+  notes: string | null
+  updatedAt: string
   job: Job
 }
+
+export type Interview = {
+  id: string
+  scheduledAt: string
+  type: InterviewType
+  meetingUrl: string | null
+  prepNotes: string | null
+  outcome: string | null
+  status: InterviewStatus
+  application: Application
+}
+
+export type InterviewInput = {
+  applicationId: string
+  scheduledAt: string
+  type: InterviewType
+  meetingUrl?: string
+  prepNotes?: string
+  outcome?: string
+  status?: InterviewStatus
+}
+
+export type Contact = {
+  id: string
+  name: string
+  company: string | null
+  jobTitle: string | null
+  email: string | null
+  linkedinUrl: string | null
+  notes: string | null
+  lastContacted: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type ContactInput = {
+  name: string
+  company?: string
+  jobTitle?: string
+  email?: string
+  linkedinUrl?: string
+  notes?: string
+  lastContacted?: string
+}
+
 
 export type DashboardSummary = {
   totalJobs: number
@@ -48,6 +107,8 @@ export type DashboardSummary = {
     status: ApplicationStatus
     count: number
   }>
+  recentJobs: Job[]
+  recentApplications: Application[]
 }
 
 type ApiOptions = Omit<RequestInit, 'body'> & {
@@ -99,15 +160,23 @@ export const api = {
     return apiRequest<{ jobs: Job[] }>('/jobs')
   },
 
-  createJob(job: {
-    company: string
-    title: string
-    location?: string
-    source: JobSource
-  }) {
+  createJob(job: JobInput) {
     return apiRequest<{ job: Job }>('/jobs', {
       method: 'POST',
       body: job,
+    })
+  },
+
+  updateJob(id: string, job: Partial<JobInput>) {
+    return apiRequest<{ job: Job }>(`/jobs/${id}`, {
+      method: 'PATCH',
+      body: job,
+    })
+  },
+
+  deleteJob(id: string) {
+    return apiRequest<void>(`/jobs/${id}`, {
+      method: 'DELETE',
     })
   },
 
@@ -122,6 +191,13 @@ export const api = {
     })
   },
 
+  updateApplicationNotes(id: string, notes: string | null) {
+    return apiRequest<{ application: Application }>(`/applications/${id}`, {
+      method: 'PATCH',
+      body: { notes },
+    })
+  },
+
   updateApplicationStatus(id: string, status: ApplicationStatus) {
     return apiRequest<{ application: Application }>(
       `/applications/${id}/status`,
@@ -131,6 +207,49 @@ export const api = {
       },
     )
   },
+
+  getInterviews() {
+    return apiRequest<{ interviews: Interview[] }>("/interviews")
+  },
+
+  createInterview(interview: InterviewInput) {
+    return apiRequest<{ interview: Interview }>("/interviews", {
+      method: "POST",
+      body: interview,
+    })
+  },
+
+  updateInterview(id: string, interview: Partial<Omit<InterviewInput, "applicationId">>) {
+    return apiRequest<{ interview: Interview }>(`/interviews/${id}`, {
+      method: "PATCH",
+      body: interview,
+    })
+  },
+
+  getContacts() {
+    return apiRequest<{ contacts: Contact[] }>('/contacts')
+  },
+
+  createContact(contact: ContactInput) {
+    return apiRequest<{ contact: Contact }>('/contacts', {
+      method: 'POST',
+      body: contact,
+    })
+  },
+
+  updateContact(id: string, contact: Partial<ContactInput>) {
+    return apiRequest<{ contact: Contact }>(`/contacts/${id}`, {
+      method: 'PATCH',
+      body: contact,
+    })
+  },
+
+  deleteContact(id: string) {
+    return apiRequest<void>(`/contacts/${id}`, {
+      method: 'DELETE',
+    })
+  },
+
 
   getDashboard() {
     return apiRequest<{ summary: DashboardSummary }>('/dashboard')

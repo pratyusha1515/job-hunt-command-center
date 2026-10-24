@@ -32,6 +32,21 @@ enum ApplicationStatus {
   GHOSTED
 }
 
+enum InterviewType {
+  PHONE
+  VIDEO
+  ONSITE
+  TECHNICAL
+  HR
+  OTHER
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -40,6 +55,7 @@ model User {
   updatedAt    DateTime @updatedAt
 
   jobs Job[]
+  contacts Contact[]
 }
 
 model Job {
@@ -70,7 +86,44 @@ model Application {
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 
-  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  job        Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  interviews Interview[]
 
   @@index([status])
+}
+
+model Interview {
+  id            String          @id @default(cuid())
+  applicationId String
+  scheduledAt   DateTime
+  type          InterviewType   @default(VIDEO)
+  meetingUrl    String?
+  prepNotes     String?
+  outcome       String?
+  status        InterviewStatus @default(SCHEDULED)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, scheduledAt])
+  @@index([status, scheduledAt])
+}
+model Contact {
+  id            String   @id @default(cuid())
+  userId        String
+  name          String
+  company       String?
+  jobTitle      String?
+  email         String?
+  linkedinUrl   String?
+  notes         String?
+  lastContacted DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, name])
+  @@index([userId, lastContacted])
 }

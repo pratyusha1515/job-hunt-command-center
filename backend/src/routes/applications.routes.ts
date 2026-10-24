@@ -5,6 +5,7 @@ import {
   createApplication,
   listApplications,
   updateApplicationStatus,
+  updateApplicationNotes,
 } from '../services/applications.service'
 import {
   requireAuth,
@@ -19,6 +20,10 @@ const createApplicationSchema = z.object({
 
 const updateStatusSchema = z.object({
   status: z.enum(applicationStatuses),
+})
+
+const updateNotesSchema = z.object({
+  notes: z.string().trim().max(5_000).nullable(),
 })
 
 router.use(requireAuth)
